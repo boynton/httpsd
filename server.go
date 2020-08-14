@@ -1,4 +1,4 @@
-package httpd
+package httpsd
 
 import (
 	"fmt"
@@ -26,7 +26,7 @@ type Server struct {
 }
 
 func (server *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	wp := NewHttpdResponseWriter(w)
+	wp := NewHttpsdResponseWriter(w)
 	server.HandlerFunc(wp, r)
 	rhost, _, err := net.SplitHostPort(r.RemoteAddr)
 	if err != nil {
@@ -67,7 +67,7 @@ func (server *Server) Configure(confPath string, handler func(http.ResponseWrite
 		if err != nil {
 			return err
 		}
-		server.logger = log.New(server.logFile, "httpd: ", log.Lshortfile)
+		server.logger = log.New(server.logFile, "httpsd: ", log.Lshortfile)
 	}
 	server.Log("Using %q to cache SSL certs from Let's Encrypt\n", server.Certs)
 	cm := &autocert.Manager{
@@ -91,7 +91,7 @@ func (server *Server) Configure(confPath string, handler func(http.ResponseWrite
 
 func (server *Server) Serve() error {
 	go func() {
-		server.RedirectServer.ListenAndServe()
+		log.Fatal(server.RedirectServer.ListenAndServe())
 	}()
 	return http.Serve(autocert.NewListener(server.Hostnames...), server.Mux)
 }
@@ -112,7 +112,7 @@ func (server *Server) Log(format string, args ...interface{}) {
 	}
 }
 
-type HttpdResponseWriter struct {
+type HttpsdResponseWriter struct {
 	http.ResponseWriter
 	Size    int64
 	Started time.Time
@@ -120,20 +120,20 @@ type HttpdResponseWriter struct {
 	Elapsed int64
 }
 
-func NewHttpdResponseWriter(rw http.ResponseWriter) *HttpdResponseWriter {
-	return &HttpdResponseWriter{
+func NewHttpsdResponseWriter(rw http.ResponseWriter) *HttpsdResponseWriter {
+	return &HttpsdResponseWriter{
 		ResponseWriter: rw,
 		Started:        time.Now(),
 	}
 }
 
-func (w *HttpdResponseWriter) Write(buf []byte) (int, error) {
+func (w *HttpsdResponseWriter) Write(buf []byte) (int, error) {
 	n, err := w.ResponseWriter.Write(buf)
 	w.Size = w.Size + int64(n)
 	return n, err
 }
 
-func (w *HttpdResponseWriter) WriteHeader(status int) {
+func (w *HttpsdResponseWriter) WriteHeader(status int) {
 	w.Elapsed = time.Since(w.Started).Milliseconds()
 	w.Status = int(status)
 	w.ResponseWriter.WriteHeader(status)
