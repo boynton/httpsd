@@ -1,5 +1,5 @@
-github.com/boynton/conf v0.0.0-20200813145425-14c598048f5a h1:W79srttTrWkdhrcq66Qh7j5oMrr1/I751QrljOBZn9M=
-github.com/boynton/conf v0.0.0-20200813145425-14c598048f5a/go.mod h1:bRNTW6fHRyFxAtE0C9/8VnWUDsnJ8c6mHVF43DeFMGY=
+github.com/boynton/conf v0.0.0-20200815204340-fc4581288794 h1:Czknz9U5So50afDSbN9knjLPqRntd+9Moj5HeA/BHHY=
+github.com/boynton/conf v0.0.0-20200815204340-fc4581288794/go.mod h1:bRNTW6fHRyFxAtE0C9/8VnWUDsnJ8c6mHVF43DeFMGY=
 github.com/ghodss/yaml v1.0.0 h1:wQHKEahhL6wmXdzwWG11gIVCkOv05bNOh+Rxn0yngAk=
 github.com/ghodss/yaml v1.0.0/go.mod h1:4dBDuWmgqj2HViK6kFavaiC9ZROes6MMH2rRYeMEF04=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
