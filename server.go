@@ -45,11 +45,16 @@ func (server *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	server.LogAccess(rhost, user, method, path, proto, agent, referer, status, size, started, elapsed)
 }
 
-func (server *Server) Configure(confPath string, handler func(http.ResponseWriter, *http.Request)) error {
+func (server *Server) ConfigureFromFile(confPath string, handler func(http.ResponseWriter, *http.Request)) error {
 	conf, err := conf.FromFile(confPath)
 	if err != nil {
 		return fmt.Errorf("Cannot read YAML config file (%s): %v\n", confPath, err)
 	}
+	return server.Configure(conf, handler)
+}
+
+func (server *Server) Configure(conf *conf.Data, handler func(http.ResponseWriter, *http.Request)) error {
+	var err error
 	server.Conf = conf
 	server.Hostnames = conf.GetStrings("hostnames", []string{"localhost"})
 	server.Certs = conf.GetString("certs", "certs")
@@ -93,7 +98,7 @@ func (server *Server) Serve() error {
 	go func() {
 		log.Fatal(server.RedirectServer.ListenAndServe())
 	}()
-	return http.Serve(autocert.NewListener(server.Hostnames...), server.Mux)
+	return server.ListenAndServeTLS("", "") //we already have everything set up.
 }
 
 func (server *Server) LogAccess(rhost, user, method, path, proto, agent, referer string, status int, size int64, started time.Time, elapsed int64) {
