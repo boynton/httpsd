@@ -59,13 +59,6 @@ func (server *Server) Configure(conf *conf.Data, handler func(http.ResponseWrite
 	server.Hostnames = conf.GetStrings("hostnames", []string{"localhost"})
 	server.Certs = conf.GetString("certs", "certs")
 	server.HandlerFunc = handler
-	accessLogPath := conf.GetString("access_log", "access_log")
-	if accessLogPath != "" {
-		server.accessLogFile, err = os.OpenFile(accessLogPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-		if err != nil {
-			return err
-		}
-	}
 	logPath := conf.GetString("log", "")
 	if logPath != "" {
 		server.logFile, err = os.OpenFile(logPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
@@ -74,16 +67,23 @@ func (server *Server) Configure(conf *conf.Data, handler func(http.ResponseWrite
 		}
 		server.logger = log.New(server.logFile, "httpsd: ", log.Lshortfile)
 	}
-	server.Log("Using %q to cache SSL certs from Let's Encrypt\n", server.Certs)
+	accessLogPath := conf.GetString("access_log", "access_log")
+	if accessLogPath != "" {
+		server.accessLogFile, err = os.OpenFile(accessLogPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		if err != nil {
+			return err
+		}
+		server.Log("Writing access file at %q\n", accessLogPath)
+	}
+	server.Log("Using directory %q to cache SSL certs\n", server.Certs)
 	cm := &autocert.Manager{
 		Prompt:     autocert.AcceptTOS,
 		HostPolicy: autocert.HostWhitelist(server.Hostnames...),
 		Cache:      autocert.DirCache(server.Certs),
 	}
-	server.Mux = http.NewServeMux()
-	server.Mux.Handle("/", server)
 	server.TLSConfig = cm.TLSConfig()
 	server.Addr = fmt.Sprintf(":https")
+	server.Handler = server
 	server.RedirectServer = &http.Server{
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 5 * time.Second,
@@ -95,6 +95,7 @@ func (server *Server) Configure(conf *conf.Data, handler func(http.ResponseWrite
 }
 
 func (server *Server) Serve() error {
+	server.Log("Serving on port 443, with redirects on port 80\n")
 	go func() {
 		log.Fatal(server.RedirectServer.ListenAndServe())
 	}()
